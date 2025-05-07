@@ -1,0 +1,65 @@
+@font-face {
+  font-family: 'team401';
+  src: url('/assets/fonts/team401.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #181825 0%, #00ff85 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #181825;
+}
+
+.login-container {
+  background: #fff;
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.login-container h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #00c96b;
+  margin-bottom: 2rem;
+}
+
+.login-container input {
+  width: calc(100% - 2px); /* Para evitar desbordamiento por borde */
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background-color: #f5f5f5;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.login-container input:focus {
+  outline: none;
+  border-color: #00ff85;
+  background-color: #fff;
+}
+
+
+
+#loginError {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: red;
+}

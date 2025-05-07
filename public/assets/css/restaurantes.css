@@ -1,0 +1,144 @@
+/* Estilos para la sección de restaurantes */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.btn-primary {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #3367d6;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.restaurant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.restaurant-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.restaurant-header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+}
+
+.restaurant-image, .restaurant-image-placeholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-right: 15px;
+  object-fit: cover;
+}
+
+.restaurant-image-placeholder {
+  background-color: #4285f4;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.restaurant-name {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.restaurant-info {
+  padding: 15px 20px;
+}
+
+.restaurant-info p {
+  margin: 8px 0;
+  color: #555;
+}
+
+.restaurant-status {
+  padding: 0 20px 15px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 0.85rem;
+}
+
+.status-active {
+  background-color: #e7f5ea;
+  color: #28a745;
+}
+
+.status-inactive {
+  background-color: #f0f0f0;
+  color: #6c757d;
+}
+
+.restaurant-actions {
+  display: flex;
+  border-top: 1px solid #eee;
+}
+
+.btn-action {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  text-decoration: none;
+  color: #4285f4;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.btn-action:hover {
+  background-color: #f8f9fa;
+}
+
+.btn-action:not(:last-child) {
+  border-right: 1px solid #eee;
+}
+
+/* Responsive adjustments for restaurants */
+@media (max-width: 768px) {
+  .restaurant-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+}

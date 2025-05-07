@@ -1,0 +1,22 @@
+{
+    "name": "comida/domicilio",
+    "description": "App para gestionar pedidos de comida a domicilio",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Comida\\Domicilio\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Carlos Mateos",
+            "email": "carlos@example.com"
+        }
+    ],
+    "require": {
+        "doctrine/orm": "^3.3",
+        "smarty/smarty": "^5.5",
+        "symfony/cache": "^7.2"
+    }
+}
