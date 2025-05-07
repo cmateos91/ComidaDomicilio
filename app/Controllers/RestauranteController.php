@@ -114,7 +114,11 @@ class RestauranteController {
         
         // Pasar datos a la plantilla
         $this->smarty->assign('nombre', $nombre);
+        $this->smarty->assign('titulo', 'Restaurantes');
+        $this->smarty->assign('seccion_activa', 'restaurantes');
         $this->smarty->assign('restaurantes', $restaurantes);
+        $this->smarty->assign('css_adicional', ['restaurantes.css']);
+        // $this->smarty->assign('js_adicional', ['restaurantes.js']); // Si hay JS específico
         $this->smarty->display('restaurantes/index.tpl');
     }
 

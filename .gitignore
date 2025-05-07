@@ -1,0 +1,25 @@
+# Smarty template cache
+templates_c/
+
+# Composer dependencies
+/vendor/
+
+# Environment files
+.env
+
+# IDE and editor files
+.idea/
+.vscode/
+.DS_Store
+
+# Logs
+*.log
+error_log
+php_error_log
+
+# Cache
+/cache/
+
+# Database backups
+*.sql
+*.bak

@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.5.0, created on 2025-05-08 01:23:07
+/* Smarty version 5.5.0, created on 2025-05-08 01:47:44
   from 'file:restaurantes/index.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.5.0',
-  'unifunc' => 'content_681beb5b8733a1_63951138',
+  'unifunc' => 'content_681bf120851571_24476409',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'fa0035e137389a5aab0cd28b9f8d6e2cde2217bb' => 
     array (
       0 => 'restaurantes/index.tpl',
-      1 => 1746660138,
+      1 => 1746661662,
       2 => 'file',
     ),
   ),
@@ -20,106 +20,44 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   array (
   ),
 ))) {
-function content_681beb5b8733a1_63951138 (\Smarty\Template $_smarty_tpl) {
+function content_681bf120851571_24476409 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = 'C:\\xampp\\htdocs\\comida-domicilio-2\\app\\Views\\restaurantes';
-?><!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Restaurantes - <?php echo $_smarty_tpl->getValue('nombre');?>
-</title>
-  <link rel="stylesheet" href="/assets/css/estilos.css" />
-  <link rel="stylesheet" href="/assets/css/botones.css" />
-  <link rel="icon" href="/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css" />
-  <link rel="stylesheet" href="/assets/css/restaurantes.css" />
-</head>
-<body>
-  <div class="dashboard-container">
-    <!-- Left Navigation Panel -->
-    <div class="left-panel">
-      <div class="brand">
-        <div class="brand-logo">
-          <img src="/favicon.svg" alt="Logo" width="40" height="40" />
-        </div>
-        <div class="brand-name">ComidaDomicilio</div>
-      </div>
-      
-      <nav class="nav-menu">
-        <a href="/dashboard" class="nav-item">
-          <div class="nav-icon">⌂</div>
-          <div class="nav-text">Dashboard</div>
-        </a>
-        
-        <a href="/restaurantes" class="nav-item active">
-          <div class="nav-icon">🍽️</div>
-          <div class="nav-text">Restaurantes</div>
-        </a>
-        
-        <a href="/menus" class="nav-item">
-          <div class="nav-icon">📋</div>
-          <div class="nav-text">Menús</div>
-        </a>
-        
-        <a href="/pedidos" class="nav-item">
-          <div class="nav-icon">👤</div>
-          <div class="nav-text">Pedidos</div>
-        </a>
-        
-        <a href="/clientes" class="nav-item">
-          <div class="nav-icon">👥</div>
-          <div class="nav-text">Clientes</div>
-        </a>
-        
-        <a href="/facturacion" class="nav-item">
-          <div class="nav-icon">💰</div>
-          <div class="nav-text">Facturación</div>
-        </a>
-        
-        <a href="/configuracion" class="nav-item">
-          <div class="nav-icon">⚙️</div>
-          <div class="nav-text">Configuración</div>
-        </a>
-        
-        <a href="/logout" class="nav-item">
-          <div class="nav-icon">🔒</div>
-          <div class="nav-text">Cerrar sesión</div>
-        </a>
-      </nav>
-    </div>
-    
-    <!-- Main Content -->
-    <div class="dashboard-content">
-      <div class="dashboard-header">
-        <h1 class="dashboard-title">Restaurantes</h1>
-        <form method="GET" action="/logout">
-          <button class="btn-ani" type="submit"><span>Cerrar sesión</span></button>
-        </form>
-      </div>
-      
-      <!-- Content for Restaurantes section -->
-      <div class="content-container">
-        <div class="section-header">
-          <h2>Mis Restaurantes</h2>
-          <button class="btn-primary">+ Añadir Restaurante</button>
-        </div>
-        
-        <?php if (( !$_smarty_tpl->hasVariable('restaurantes') || empty($_smarty_tpl->getValue('restaurantes')))) {?>
-          <div class="empty-state">
-            <div class="empty-icon">🍽️</div>
-            <h3>No tienes restaurantes registrados</h3>
-            <p>Comienza añadiendo tu primer restaurante para gestionarlo</p>
-            <button class="btn-primary">Añadir mi primer restaurante</button>
-          </div>
-        <?php } else { ?>
-          <div class="restaurant-grid">
-            <?php
+$_smarty_tpl->getInheritance()->init($_smarty_tpl, true);
+?>
+<!-- app/Views/restaurantes/index.tpl -->
+
+<?php 
+$_smarty_tpl->getInheritance()->instanceBlock($_smarty_tpl, 'Block_478061374681bf1208453b5_33270999', "contenido");
+$_smarty_tpl->getInheritance()->endChild($_smarty_tpl, "../layouts/dashboard.tpl", $_smarty_current_dir);
+}
+/* {block "contenido"} */
+class Block_478061374681bf1208453b5_33270999 extends \Smarty\Runtime\Block
+{
+public function callBlock(\Smarty\Template $_smarty_tpl) {
+$_smarty_current_dir = 'C:\\xampp\\htdocs\\comida-domicilio-2\\app\\Views\\restaurantes';
+?>
+
+<div class="section-header">
+  <h2>Mis Restaurantes</h2>
+  <button class="btn-primary">+ Añadir Restaurante</button>
+</div>
+
+<?php if (( !$_smarty_tpl->hasVariable('restaurantes') || empty($_smarty_tpl->getValue('restaurantes')))) {?>
+  <div class="empty-state">
+    <div class="empty-icon">🍽️</div>
+    <h3>No tienes restaurantes registrados</h3>
+    <p>Comienza añadiendo tu primer restaurante para gestionarlo</p>
+    <button class="btn-primary">Añadir mi primer restaurante</button>
+  </div>
+<?php } else { ?>
+  <div class="restaurant-grid">
+    <?php
 $_from = $_smarty_tpl->getSmarty()->getRuntime('Foreach')->init($_smarty_tpl, $_smarty_tpl->getValue('restaurantes'), 'restaurante');
 $foreach0DoElse = true;
 foreach ($_from ?? [] as $_smarty_tpl->getVariable('restaurante')->value) {
 $foreach0DoElse = false;
 ?>
-              <div class="restaurant-card">
+      <div class="restaurant-card">
                 <div class="restaurant-header">
                   <?php if ($_smarty_tpl->getValue('restaurante')->getImagen()) {?>
                     <img src="<?php echo $_smarty_tpl->getValue('restaurante')->getImagen();?>
@@ -160,14 +98,12 @@ $foreach0DoElse = false;
 /menu" class="btn-action">Gestionar menú</a>
                 </div>
               </div>
-            <?php
+    <?php
 }
 $_smarty_tpl->getSmarty()->getRuntime('Foreach')->restore($_smarty_tpl, 1);?>
-          </div>
-        <?php }?>
-      </div>
-    </div>
   </div>
-</body>
-</html><?php }
+<?php }
+}
+}
+/* {/block "contenido"} */
 }
