@@ -14,8 +14,8 @@
         </form>
       </div>
       
-      <!-- Content for specific section -->
-      <div class="content-container">
+      <!-- Content for specific section - Aseguramos ancho completo -->
+      <div class="content-container" style="width: 100%; max-width: 100%;">
         {block name="contenido"}
           <!-- El contenido específico de cada vista se insertará aquí -->
         {/block}
