@@ -2,8 +2,10 @@
 namespace Comida\Domicilio\Models;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: "Comida\Domicilio\Repositories\RestauranteRepository")]
 #[ORM\Table(name: "restaurante")]
 class Restaurante
 {
@@ -35,6 +37,15 @@ class Restaurante
 
     #[ORM\Column(type: "datetime", name: "fecha_registro")]
     private \DateTime $fechaRegistro;
+    
+    #[ORM\ManyToMany(targetEntity: Usuario::class, mappedBy: "restaurantes")]
+    private Collection $usuarios;
+    
+    #[ORM\OneToMany(targetEntity: Producto::class, mappedBy: "restaurante", cascade: ["persist", "remove"])]
+    private Collection $productos;
+    
+    #[ORM\OneToMany(targetEntity: Pedido::class, mappedBy: "restaurante")]
+    private Collection $pedidos;
     
     // Propiedad para almacenar el número de pedidos de hoy (no persistente en BD)
     private int $pedidosHoy = 0;
@@ -116,6 +127,58 @@ class Restaurante
     public function setPedidosHoy($pedidosHoy) {
         $this->pedidosHoy = $pedidosHoy;
     }
-
+    
+    public function __construct() {
+        $this->usuarios = new ArrayCollection();
+        $this->productos = new ArrayCollection();
+        $this->pedidos = new ArrayCollection();
+        $this->fechaRegistro = new \DateTime();
+    }
+    
+    public function getUsuarios(): Collection {
+        return $this->usuarios;
+    }
+    
+    public function getProductos(): Collection {
+        return $this->productos;
+    }
+    
+    public function addProducto(Producto $producto): self {
+        if (!$this->productos->contains($producto)) {
+            $this->productos[] = $producto;
+            $producto->setRestaurante($this);
+        }
+        return $this;
+    }
+    
+    public function removeProducto(Producto $producto): self {
+        if ($this->productos->removeElement($producto)) {
+            if ($producto->getRestaurante() === $this) {
+                $producto->setRestaurante(null);
+            }
+        }
+        return $this;
+    }
+    
+    public function getPedidos(): Collection {
+        return $this->pedidos;
+    }
+    
+    public function addPedido(Pedido $pedido): self {
+        if (!$this->pedidos->contains($pedido)) {
+            $this->pedidos[] = $pedido;
+            $pedido->setRestaurante($this);
+        }
+        return $this;
+    }
+    
+    public function removePedido(Pedido $pedido): self {
+        if ($this->pedidos->removeElement($pedido)) {
+            if ($pedido->getRestaurante() === $this) {
+                $pedido->setRestaurante(null);
+            }
+        }
+        return $this;
+    }
     
 }

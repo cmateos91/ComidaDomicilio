@@ -3,6 +3,8 @@
 namespace Comida\Domicilio\Controllers;
 
 use Comida\Domicilio\Models\Restaurante;
+use Comida\Domicilio\Models\Usuario;
+use Comida\Domicilio\Models\Pedido;
 use Comida\Domicilio\Utils\BaseEntityUtils;
 use Comida\Domicilio\Utils\SessionHelper;
 use Doctrine\DBAL\Exception;
@@ -52,59 +54,24 @@ class RestauranteController {
     // Obtiene los restaurantes asociados a un usuario
     public function getRestaurantesByUsuario($usuarioId) {
         try {
-            // Usamos SQL nativo para unir con la tabla usuario_restaurante
-            $conn = $this->em->getConnection();
-            $sql = "
-                SELECT r.* 
-                FROM restaurante r
-                INNER JOIN usuario_restaurante ur ON r.id = ur.restaurante_id
-                WHERE ur.usuario_id = :usuarioId
-                AND r.activo = 1
-                ORDER BY r.nombre ASC
-            ";
+            // Buscar el usuario por ID
+            $usuario = $this->em->getRepository(Usuario::class)->find($usuarioId);
             
-            $stmt = $conn->prepare($sql);
-            $stmt->bindValue('usuarioId', $usuarioId);
-            $result = $stmt->executeQuery();
-            $restaurantesData = $result->fetchAllAssociative();
+            if (!$usuario) {
+                return [];
+            }
+            
+            // Obtener restaurantes utilizando el método del repositorio personalizado
+            $restauranteRepo = $this->em->getRepository(Restaurante::class);
+            $restaurantes = $restauranteRepo->getRestaurantesByUsuario($usuario);
             
             // Obtener el recuento de pedidos de hoy para cada restaurante
-            $pedidosHoyPorRestaurante = $this->getPedidosHoyPorRestaurante();
+            $pedidoRepo = $this->em->getRepository(Pedido::class);
             
-            // Convertimos los datos en objetos Restaurante
-            $restaurantes = [];
-            foreach ($restaurantesData as $data) {
-                $restaurante = new Restaurante();
-                $restaurante->setNombre($data['nombre']);
-                $restaurante->setDireccion($data['direccion']);
-                if (isset($data['telefono'])) $restaurante->setTelefono($data['telefono']);
-                if (isset($data['email'])) $restaurante->setEmail($data['email']);
-                if (isset($data['imagen'])) $restaurante->setImagen($data['imagen']);
-                if (isset($data['descripcion'])) $restaurante->setDescripcion($data['descripcion']);
-                $restaurante->setActivo($data['activo'] == 1);
-                
-                // Propiedades privadas que no podemos establecer directamente
-                $reflClass = new \ReflectionClass(Restaurante::class);
-                
-                $idProperty = $reflClass->getProperty('id');
-                $idProperty->setAccessible(true);
-                $idProperty->setValue($restaurante, $data['id']);
-                
-                $fechaProperty = $reflClass->getProperty('fechaRegistro');
-                $fechaProperty->setAccessible(true);
-                $fechaProperty->setValue($restaurante, new \DateTime($data['fecha_registro']));
-                
-                // Asignar el contador de pedidos de hoy
-                $restauranteId = $data['id'];
-                $contadorPedidosHoy = isset($pedidosHoyPorRestaurante[$restauranteId]) ? 
-                    $pedidosHoyPorRestaurante[$restauranteId] : 0;
-                
-                // Añadir propiedad personalizada para pedidos de hoy
-                $pedidosHoyProperty = $reflClass->getProperty('pedidosHoy');
-                $pedidosHoyProperty->setAccessible(true);
-                $pedidosHoyProperty->setValue($restaurante, $contadorPedidosHoy);
-                
-                $restaurantes[] = $restaurante;
+            // Asignar contadores de pedidos
+            foreach ($restaurantes as $restaurante) {
+                $contadorPedidosHoy = $pedidoRepo->contarPedidosHoyRestaurante($restaurante);
+                $restaurante->setPedidosHoy($contadorPedidosHoy);
             }
             
             return $restaurantes;
@@ -115,28 +82,17 @@ class RestauranteController {
         }
     }
     
-    /**
-     * Obtiene el recuento de pedidos de hoy para cada restaurante
-     * @return array Un array asociativo con el ID del restaurante como clave y el número de pedidos como valor
-     */
+    // Esta función ya no es necesaria porque se usa el repositorio de Pedido
+    // La mantenemos por compatibilidad con otras partes del código que puedan usarla
     private function getPedidosHoyPorRestaurante() {
         try {
             // Obtener la fecha de hoy
             $hoy = new \DateTime('today');
             $hoyFin = new \DateTime('today 23:59:59');
             
-            // Usar Query Builder de Doctrine
-            $queryBuilder = $this->em->createQueryBuilder();
-            
-            $queryBuilder
-                ->select('p.restauranteId, COUNT(p.id) as totalPedidos')
-                ->from('Comida\Domicilio\Models\Pedido', 'p')
-                ->where('p.fechaPedido BETWEEN :fechaInicio AND :fechaFin')
-                ->groupBy('p.restauranteId')
-                ->setParameter('fechaInicio', $hoy)
-                ->setParameter('fechaFin', $hoyFin);
-            
-            $result = $queryBuilder->getQuery()->getResult();
+            // Usar método del repositorio personalizado
+            $pedidoRepo = $this->em->getRepository(Pedido::class);
+            $result = $pedidoRepo->getEstadisticasPorRestaurante($hoy, $hoyFin);
             
             // Convertir a un array asociativo [restaurante_id => total_pedidos]
             $resultado = [];

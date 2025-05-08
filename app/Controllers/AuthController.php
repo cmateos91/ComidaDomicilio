@@ -3,6 +3,8 @@
 namespace Comida\Domicilio\Controllers;
 
 use Comida\Domicilio\Models\Usuario;
+use Comida\Domicilio\Models\Pedido;
+use Comida\Domicilio\Models\Restaurante;
 use Comida\Domicilio\Utils\SessionHelper;
 use Smarty\Smarty;
 
@@ -74,13 +76,46 @@ class AuthController {
     public function dashboard() {
         SessionHelper::check(); // Redirige si no hay sesión válida
 
+        $usuarioId = SessionHelper::get('usuario_id');
         $nombre = SessionHelper::get('usuario_nombre');
+        $rol = SessionHelper::get('usuario_rol');
+        
+        // Obtener el usuario completo
+        $usuario = $this->em->getRepository(Usuario::class)->find($usuarioId);
+        
+        if (!$usuario) {
+            SessionHelper::logout();
+            header('Location: /');
+            exit;
+        }
         
         // Obtener el total de pedidos de hoy
         $totalPedidosHoy = $this->getTotalPedidosHoy();
         
+        // Obtener estadísticas de restaurantes si es administrador o propietario
+        $estadisticasRestaurantes = [];
+        
+        if ($rol === 'admin' || $rol === 'propietario') {
+            // Obtener restaurantes del usuario
+            $restaurantes = $usuario->getRestaurantes();
+            
+            foreach ($restaurantes as $restaurante) {
+                // Contar pedidos de hoy para este restaurante
+                $pedidosHoy = $this->contarPedidosHoyRestaurante($restaurante);
+                
+                $estadisticasRestaurantes[] = [
+                    'id' => $restaurante->getId(),
+                    'nombre' => $restaurante->getNombre(),
+                    'pedidosHoy' => $pedidosHoy,
+                ];
+            }
+        }
+        
         $this->smarty->assign('nombre', $nombre);
         $this->smarty->assign('totalPedidosHoy', $totalPedidosHoy);
+        $this->smarty->assign('estadisticasRestaurantes', $estadisticasRestaurantes);
+        $this->smarty->assign('seccion_activa', 'dashboard');
+        $this->smarty->assign('titulo', 'Dashboard');
         $this->smarty->display('dashboard/index.tpl');
     }
     
@@ -90,26 +125,28 @@ class AuthController {
      */
     private function getTotalPedidosHoy() {
         try {
-            // Obtener la fecha de hoy
-            $hoy = new \DateTime('today');
-            $hoyFin = new \DateTime('today 23:59:59');
-            
-            // Usar Query Builder de Doctrine
-            $queryBuilder = $this->em->createQueryBuilder();
-            
-            $queryBuilder
-                ->select('COUNT(p.id)')
-                ->from('Comida\Domicilio\Models\Pedido', 'p')
-                ->where('p.fechaPedido BETWEEN :fechaInicio AND :fechaFin')
-                ->setParameter('fechaInicio', $hoy)
-                ->setParameter('fechaFin', $hoyFin);
-            
-            $result = $queryBuilder->getQuery()->getSingleScalarResult();
-            
-            return (int)$result;
+            $pedidoRepo = $this->em->getRepository(Pedido::class);
+            return count($pedidoRepo->getPedidosHoy());
         } catch (\Exception $e) {
             // Manejo de errores
             error_log("Error al obtener total de pedidos de hoy: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+    /**
+     * Cuenta los pedidos de hoy para un restaurante específico
+     * 
+     * @param Restaurante $restaurante
+     * @return int Número de pedidos de hoy
+     */
+    private function contarPedidosHoyRestaurante(Restaurante $restaurante): int {
+        try {
+            $pedidoRepo = $this->em->getRepository(Pedido::class);
+            return $pedidoRepo->contarPedidosHoyRestaurante($restaurante);
+        } catch (\Exception $e) {
+            // Manejo de errores
+            error_log("Error al contar pedidos por restaurante: " . $e->getMessage());
             return 0;
         }
     }

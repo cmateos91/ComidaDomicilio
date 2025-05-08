@@ -23,17 +23,17 @@ class ClienteController {
     }
     
     /**
- * Verificar que el usuario tiene rol 'usuario'
- */
-private function checkClienteRole() {
-    SessionHelper::check(); // Redirige si no hay sesión
-    
-    $rol = SessionHelper::get('usuario_rol');
-    if ($rol !== 'usuario') { // Cambio aquí: "usuario" en lugar de "cliente"
-        header('Location: /dashboard');
-        exit;
+     * Verificar que el usuario tiene rol 'usuario'
+     */
+    private function checkClienteRole() {
+        SessionHelper::check(); // Redirige si no hay sesión
+        
+        $rol = SessionHelper::get('usuario_rol');
+        if ($rol !== 'usuario') { // Cambio aquí: "usuario" en lugar de "cliente"
+            header('Location: /dashboard');
+            exit;
+        }
     }
-}
     
     /**
      * Dashboard principal del cliente
@@ -44,28 +44,27 @@ private function checkClienteRole() {
         $usuarioId = SessionHelper::get('usuario_id');
         $nombre = SessionHelper::get('usuario_nombre');
         
-        // Obtener pedidos recientes
-        $pedidosRecientes = $this->em->getRepository(Pedido::class)
-            ->findBy(['usuarioId' => $usuarioId], ['fechaPedido' => 'DESC'], 3);
+        // Obtener el usuario completo
+        $usuario = $this->em->getRepository(Usuario::class)->find($usuarioId);
         
-        // Cargar los restaurantes asociados a los pedidos
-        $restaurantes = [];
-        foreach ($pedidosRecientes as $pedido) {
-            $restauranteId = $pedido->getRestauranteId();
-            if (!isset($restaurantes[$restauranteId])) {
-                $restaurantes[$restauranteId] = $this->em->getRepository(Restaurante::class)->find($restauranteId);
-            }
+        if (!$usuario) {
+            SessionHelper::logout();
+            header('Location: /');
+            exit;
         }
         
-        // Restaurantes populares
-        $restaurantesPopulares = $this->em->getRepository(Restaurante::class)
-            ->findBy(['activo' => true], ['id' => 'DESC'], 6);
+        // Obtener pedidos recientes con el repositorio personalizado
+        $pedidoRepo = $this->em->getRepository(Pedido::class);
+        $pedidosRecientes = $pedidoRepo->getPedidosUsuarioConDetalles($usuario, 3);
+        
+        // Obtener restaurantes populares utilizando el repositorio personalizado
+        $restauranteRepo = $this->em->getRepository(Restaurante::class);
+        $restaurantesPopulares = $restauranteRepo->getRestaurantesPopulares(6);
         
         $this->smarty->assign('nombre', $nombre);
         $this->smarty->assign('titulo', 'Mi Cuenta');
         $this->smarty->assign('seccion_activa', 'inicio');
         $this->smarty->assign('pedidosRecientes', $pedidosRecientes);
-        $this->smarty->assign('restaurantes', $restaurantes); // Pasamos los restaurantes a la vista
         $this->smarty->assign('restaurantesPopulares', $restaurantesPopulares);
         
         // Añadir CSS para la vista de cliente
@@ -84,9 +83,18 @@ private function checkClienteRole() {
         $usuarioId = SessionHelper::get('usuario_id');
         $nombre = SessionHelper::get('usuario_nombre');
         
-        // Obtener todos los pedidos del usuario
-        $pedidos = $this->em->getRepository(Pedido::class)
-            ->findBy(['usuario' => $usuarioId], ['fechaPedido' => 'DESC']);
+        // Obtener el usuario completo
+        $usuario = $this->em->getRepository(Usuario::class)->find($usuarioId);
+        
+        if (!$usuario) {
+            SessionHelper::logout();
+            header('Location: /');
+            exit;
+        }
+        
+        // Obtener todos los pedidos del usuario con el repositorio personalizado
+        $pedidoRepo = $this->em->getRepository(Pedido::class);
+        $pedidos = $pedidoRepo->getPedidosUsuarioConDetalles($usuario);
         
         $this->smarty->assign('nombre', $nombre);
         $this->smarty->assign('titulo', 'Mis Pedidos');
@@ -95,5 +103,22 @@ private function checkClienteRole() {
         $this->smarty->display('cliente/pedidos/index.tpl');
     }
     
-    // Más métodos para las demás secciones del área de cliente...
+    /**
+     * Ver restaurantes disponibles para realizar pedidos
+     */
+    public function restaurantes() {
+        $this->checkClienteRole();
+        
+        $nombre = SessionHelper::get('usuario_nombre');
+        
+        // Obtener todos los restaurantes activos usando el repositorio personalizado
+        $restauranteRepo = $this->em->getRepository(Restaurante::class);
+        $restaurantes = $restauranteRepo->getRestaurantesActivos();
+        
+        $this->smarty->assign('nombre', $nombre);
+        $this->smarty->assign('titulo', 'Restaurantes');
+        $this->smarty->assign('seccion_activa', 'restaurantes');
+        $this->smarty->assign('restaurantes', $restaurantes);
+        $this->smarty->display('cliente/restaurantes/index.tpl');
+    }
 }

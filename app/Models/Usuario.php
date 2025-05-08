@@ -3,6 +3,8 @@
 namespace Comida\Domicilio\Models;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity]
 #[ORM\Table(name: "usuario")]
@@ -49,6 +51,19 @@ class Usuario
     #[ORM\Column(type: "boolean", options: ["default" => true])]
     private bool $activo = true;
 
+    #[ORM\ManyToMany(targetEntity: Restaurante::class, inversedBy: "usuarios")]
+    #[ORM\JoinTable(name: "usuario_restaurante",
+        joinColumns: [new ORM\JoinColumn(name: "usuario_id", referencedColumnName: "id")],
+        inverseJoinColumns: [new ORM\JoinColumn(name: "restaurante_id", referencedColumnName: "id")]
+    )]
+    private Collection $restaurantes;
+    
+    #[ORM\OneToMany(targetEntity: Pedido::class, mappedBy: "usuario")]
+    private Collection $pedidos;
+    
+    #[ORM\OneToMany(targetEntity: Carrito::class, mappedBy: "usuario")]
+    private Collection $carritos;
+
     // Getters y Setters
 
     public function getId(): int { return $this->id; }
@@ -88,4 +103,78 @@ class Usuario
 
     public function isActivo(): bool { return $this->activo; }
     public function setActivo(bool $activo): void { $this->activo = $activo; }
+    
+    public function __construct() {
+        $this->restaurantes = new ArrayCollection();
+        $this->pedidos = new ArrayCollection();
+        $this->carritos = new ArrayCollection();
+        $this->fechaRegistro = new \DateTime();
+    }
+    
+    public function getRestaurantes(): Collection {
+        return $this->restaurantes;
+    }
+    
+    public function addRestaurante(Restaurante $restaurante): self {
+        if (!$this->restaurantes->contains($restaurante)) {
+            $this->restaurantes[] = $restaurante;
+        }
+        return $this;
+    }
+    
+    public function removeRestaurante(Restaurante $restaurante): self {
+        $this->restaurantes->removeElement($restaurante);
+        return $this;
+    }
+    
+    public function getPedidos(): Collection {
+        return $this->pedidos;
+    }
+    
+    public function addPedido(Pedido $pedido): self {
+        if (!$this->pedidos->contains($pedido)) {
+            $this->pedidos[] = $pedido;
+            $pedido->setUsuario($this);
+        }
+        return $this;
+    }
+    
+    public function removePedido(Pedido $pedido): self {
+        if ($this->pedidos->removeElement($pedido)) {
+            if ($pedido->getUsuario() === $this) {
+                $pedido->setUsuario(null);
+            }
+        }
+        return $this;
+    }
+    
+    public function getCarritos(): Collection {
+        return $this->carritos;
+    }
+    
+    public function getCarritoActivo(): ?Carrito {
+        foreach ($this->carritos as $carrito) {
+            if ($carrito->isActivo()) {
+                return $carrito;
+            }
+        }
+        return null;
+    }
+    
+    public function addCarrito(Carrito $carrito): self {
+        if (!$this->carritos->contains($carrito)) {
+            $this->carritos[] = $carrito;
+            $carrito->setUsuario($this);
+        }
+        return $this;
+    }
+    
+    public function removeCarrito(Carrito $carrito): self {
+        if ($this->carritos->removeElement($carrito)) {
+            if ($carrito->getUsuario() === $this) {
+                $carrito->setUsuario(null);
+            }
+        }
+        return $this;
+    }
 }

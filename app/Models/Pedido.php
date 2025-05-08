@@ -2,8 +2,10 @@
 namespace Comida\Domicilio\Models;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: "Comida\Domicilio\Repositories\PedidoRepository")]
 #[ORM\Table(name: "pedidos")]
 class Pedido
 {
@@ -12,8 +14,9 @@ class Pedido
     #[ORM\Column(type: "integer")]
     private int $id;
 
-    #[ORM\Column(type: "integer", name: "restaurante_id")]
-    private int $restauranteId;
+    #[ORM\ManyToOne(targetEntity: Restaurante::class, inversedBy: "pedidos")]
+    #[ORM\JoinColumn(name: "restaurante_id", referencedColumnName: "id")]
+    private ?Restaurante $restaurante = null;
 
     #[ORM\Column(type: "datetime", name: "fecha_pedido")]
     private \DateTime $fechaPedido;
@@ -33,21 +36,37 @@ class Pedido
     #[ORM\Column(type: "text", name: "notas", nullable: true)]
     private ?string $notas = null;
 
-    #[ORM\Column(type: "integer", name: "usuario_id")]
-    private int $usuarioId;
+    #[ORM\ManyToOne(targetEntity: Usuario::class, inversedBy: "pedidos")]
+    #[ORM\JoinColumn(name: "usuario_id", referencedColumnName: "id")]
+    private ?Usuario $usuario = null;
+    
+    #[ORM\OneToMany(targetEntity: ItemPedido::class, mappedBy: "pedido", cascade: ["persist", "remove"])]
+    private Collection $items;
     
     // Getters y setters
+    
+    public function __construct() {
+        $this->items = new ArrayCollection();
+        $this->fechaPedido = new \DateTime();
+        $this->estado = "pendiente";
+    }
 
     public function getId(): int {
         return $this->id;
     }
 
-    public function getRestauranteId(): int {
-        return $this->restauranteId;
+    public function getRestaurante(): ?Restaurante {
+        return $this->restaurante;
     }
 
-    public function setRestauranteId(int $restauranteId): void {
-        $this->restauranteId = $restauranteId;
+    public function setRestaurante(?Restaurante $restaurante): self {
+        $this->restaurante = $restaurante;
+        return $this;
+    }
+    
+    // Métodos para mantener compatibilidad con código existente
+    public function getRestauranteId(): ?int {
+        return $this->restaurante ? $this->restaurante->getId() : null;
     }
 
     public function getFechaPedido(): \DateTime {
@@ -98,11 +117,51 @@ class Pedido
         $this->notas = $notas;
     }
 
-    public function getUsuarioId(): int {
-        return $this->usuarioId;
+    public function getUsuario(): ?Usuario {
+        return $this->usuario;
     }
 
-    public function setUsuarioId(int $usuarioId): void {
-        $this->usuarioId = $usuarioId;
+    public function setUsuario(?Usuario $usuario): self {
+        $this->usuario = $usuario;
+        return $this;
+    }
+    
+    // Métodos para mantener compatibilidad con código existente
+    public function getUsuarioId(): ?int {
+        return $this->usuario ? $this->usuario->getId() : null;
+    }
+    
+    public function getItems(): Collection {
+        return $this->items;
+    }
+    
+    public function addItem(ItemPedido $item): self {
+        if (!$this->items->contains($item)) {
+            $this->items[] = $item;
+            $item->setPedido($this);
+        }
+        return $this;
+    }
+    
+    public function removeItem(ItemPedido $item): self {
+        if ($this->items->removeElement($item)) {
+            if ($item->getPedido() === $this) {
+                $item->setPedido(null);
+            }
+        }
+        return $this;
+    }
+    
+    public function calcularTotal(): float {
+        $total = 0;
+        foreach ($this->items as $item) {
+            $total += $item->getSubtotal();
+        }
+        return $total;
+    }
+    
+    public function actualizarTotal(): self {
+        $this->total = $this->calcularTotal();
+        return $this;
     }
 }
