@@ -35,6 +35,9 @@ class Restaurante
 
     #[ORM\Column(type: "datetime", name: "fecha_registro")]
     private \DateTime $fechaRegistro;
+    
+    // Propiedad para almacenar el número de pedidos de hoy (no persistente en BD)
+    private int $pedidosHoy = 0;
 
     // Getters y setters
 
@@ -104,6 +107,14 @@ class Restaurante
 
     public function setFechaRegistro($fechaRegistro) {
         $this->fechaRegistro = $fechaRegistro;
+    }
+    
+    public function getPedidosHoy() {
+        return $this->pedidosHoy;
+    }
+    
+    public function setPedidosHoy($pedidosHoy) {
+        $this->pedidosHoy = $pedidosHoy;
     }
 
     

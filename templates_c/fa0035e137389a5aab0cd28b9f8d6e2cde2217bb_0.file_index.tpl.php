@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.5.0, created on 2025-05-08 02:16:43
+/* Smarty version 5.5.0, created on 2025-05-08 02:23:05
   from 'file:restaurantes/index.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.5.0',
-  'unifunc' => 'content_681bf7eb4a7f44_16079460',
+  'unifunc' => 'content_681bf969bfc976_31939527',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     'fa0035e137389a5aab0cd28b9f8d6e2cde2217bb' => 
     array (
       0 => 'restaurantes/index.tpl',
-      1 => 1746663401,
+      1 => 1746663728,
       2 => 'file',
     ),
   ),
@@ -20,17 +20,17 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   array (
   ),
 ))) {
-function content_681bf7eb4a7f44_16079460 (\Smarty\Template $_smarty_tpl) {
+function content_681bf969bfc976_31939527 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = 'C:\\xampp\\htdocs\\comida-domicilio-2\\app\\Views\\restaurantes';
 $_smarty_tpl->getInheritance()->init($_smarty_tpl, true);
 ?>
 
 <?php 
-$_smarty_tpl->getInheritance()->instanceBlock($_smarty_tpl, 'Block_526877647681bf7eb49a662_49693367', "contenido");
+$_smarty_tpl->getInheritance()->instanceBlock($_smarty_tpl, 'Block_140705412681bf969bef266_06795614', "contenido");
 $_smarty_tpl->getInheritance()->endChild($_smarty_tpl, "../layouts/dashboard.tpl", $_smarty_current_dir);
 }
 /* {block "contenido"} */
-class Block_526877647681bf7eb49a662_49693367 extends \Smarty\Runtime\Block
+class Block_140705412681bf969bef266_06795614 extends \Smarty\Runtime\Block
 {
 public function callBlock(\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = 'C:\\xampp\\htdocs\\comida-domicilio-2\\app\\Views\\restaurantes';
@@ -72,17 +72,27 @@ $foreach0DoElse = false;
 </h3>
         </div>
         <div class="restaurant-info">
-        <p><strong>Dirección:</strong> <span>📍</span> <?php echo $_smarty_tpl->getValue('restaurante')->getDireccion();?>
+          <div class="restaurant-stats">
+            <div class="stat-card">
+              <div class="stat-icon">🛒</div>
+              <div class="stat-content">
+                <p class="stat-label">Pedidos de hoy</p>
+                <p class="stat-value"><?php echo $_smarty_tpl->getValue('restaurante')->getPedidosHoy();?>
 </p>
-        <?php if ($_smarty_tpl->getValue('restaurante')->getTelefono()) {?>
-          <p><strong>Teléfono:</strong> <span>📞</span> <?php echo $_smarty_tpl->getValue('restaurante')->getTelefono();?>
+              </div>
+            </div>
+          </div>
+          <p><strong>Dirección:</strong> <span>📍</span> <?php echo $_smarty_tpl->getValue('restaurante')->getDireccion();?>
 </p>
-        <?php }?>
-        <?php if ($_smarty_tpl->getValue('restaurante')->getEmail()) {?>
-          <p><strong>Email:</strong> <span>📧</span> <?php echo $_smarty_tpl->getValue('restaurante')->getEmail();?>
+          <?php if ($_smarty_tpl->getValue('restaurante')->getTelefono()) {?>
+            <p><strong>Teléfono:</strong> <span>📞</span> <?php echo $_smarty_tpl->getValue('restaurante')->getTelefono();?>
 </p>
-        <?php }?>
-      </div>
+          <?php }?>
+          <?php if ($_smarty_tpl->getValue('restaurante')->getEmail()) {?>
+            <p><strong>Email:</strong> <span>📧</span> <?php echo $_smarty_tpl->getValue('restaurante')->getEmail();?>
+</p>
+          <?php }?>
+        </div>
         <div class="restaurant-status">
           <span class="status-badge <?php if ($_smarty_tpl->getValue('restaurante')->isActivo()) {?>status-active<?php } else { ?>status-inactive<?php }?>">
             <?php if ($_smarty_tpl->getValue('restaurante')->isActivo()) {?>Abierto<?php } else { ?>Cerrado<?php }?>

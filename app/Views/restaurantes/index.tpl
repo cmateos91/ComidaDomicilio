@@ -27,14 +27,23 @@
           <h3 class="restaurant-name">{$restaurante->getNombre()}</h3>
         </div>
         <div class="restaurant-info">
-        <p><strong>Dirección:</strong> <span>📍</span> {$restaurante->getDireccion()}</p>
-        {if $restaurante->getTelefono()}
-          <p><strong>Teléfono:</strong> <span>📞</span> {$restaurante->getTelefono()}</p>
-        {/if}
-        {if $restaurante->getEmail()}
-          <p><strong>Email:</strong> <span>📧</span> {$restaurante->getEmail()}</p>
-        {/if}
-      </div>
+          <div class="restaurant-stats">
+            <div class="stat-card">
+              <div class="stat-icon">🛒</div>
+              <div class="stat-content">
+                <p class="stat-label">Pedidos de hoy</p>
+                <p class="stat-value">{$restaurante->getPedidosHoy()}</p>
+              </div>
+            </div>
+          </div>
+          <p><strong>Dirección:</strong> <span>📍</span> {$restaurante->getDireccion()}</p>
+          {if $restaurante->getTelefono()}
+            <p><strong>Teléfono:</strong> <span>📞</span> {$restaurante->getTelefono()}</p>
+          {/if}
+          {if $restaurante->getEmail()}
+            <p><strong>Email:</strong> <span>📧</span> {$restaurante->getEmail()}</p>
+          {/if}
+        </div>
         <div class="restaurant-status">
           <span class="status-badge {if $restaurante->isActivo()}status-active{else}status-inactive{/if}">
             {if $restaurante->isActivo()}Abierto{else}Cerrado{/if}

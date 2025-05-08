@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.5.0, created on 2025-05-08 00:56:57
+/* Smarty version 5.5.0, created on 2025-05-08 02:24:48
   from 'file:dashboard/index.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.5.0',
-  'unifunc' => 'content_681be539620054_74978134',
+  'unifunc' => 'content_681bf9d091f732_51544014',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '9ed4215dd799a2526d16f3a5f84ac91b1e76bb27' => 
     array (
       0 => 'dashboard/index.tpl',
-      1 => 1746658614,
+      1 => 1746663866,
       2 => 'file',
     ),
   ),
@@ -20,7 +20,7 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   array (
   ),
 ))) {
-function content_681be539620054_74978134 (\Smarty\Template $_smarty_tpl) {
+function content_681bf9d091f732_51544014 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = 'C:\\xampp\\htdocs\\comida-domicilio-2\\app\\Views\\dashboard';
 ?><!DOCTYPE html>
 <html lang="es">
@@ -102,7 +102,8 @@ $_smarty_current_dir = 'C:\\xampp\\htdocs\\comida-domicilio-2\\app\\Views\\dashb
           <div class="metric-icon" style="color: #4285f4;">🛒</div>
           <div>
             <p class="metric-label">Pedidos de hoy</p>
-            <p class="metric-value">12</p>
+            <p class="metric-value"><?php echo $_smarty_tpl->getValue('totalPedidosHoy');?>
+</p>
           </div>
         </div>
         

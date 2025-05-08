@@ -77,7 +77,7 @@
           <div class="metric-icon" style="color: #4285f4;">🛒</div>
           <div>
             <p class="metric-label">Pedidos de hoy</p>
-            <p class="metric-value">12</p>
+            <p class="metric-value">{$totalPedidosHoy}</p>
           </div>
         </div>
         

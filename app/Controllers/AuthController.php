@@ -77,8 +77,43 @@ class AuthController {
         SessionHelper::check(); // Redirige si no hay sesión válida
 
         $nombre = SessionHelper::get('usuario_nombre');
+        
+        // Obtener el total de pedidos de hoy
+        $totalPedidosHoy = $this->getTotalPedidosHoy();
+        
         $this->smarty->assign('nombre', $nombre);
+        $this->smarty->assign('totalPedidosHoy', $totalPedidosHoy);
         $this->smarty->display('dashboard/index.tpl');
+    }
+    
+    /**
+     * Obtiene el total de pedidos de hoy
+     * @return int Número total de pedidos de hoy
+     */
+    private function getTotalPedidosHoy() {
+        try {
+            // Obtener la fecha de hoy
+            $hoy = new \DateTime('today');
+            $hoyFin = new \DateTime('today 23:59:59');
+            
+            // Usar Query Builder de Doctrine
+            $queryBuilder = $this->em->createQueryBuilder();
+            
+            $queryBuilder
+                ->select('COUNT(p.id)')
+                ->from('Comida\Domicilio\Models\Pedido', 'p')
+                ->where('p.fechaPedido BETWEEN :fechaInicio AND :fechaFin')
+                ->setParameter('fechaInicio', $hoy)
+                ->setParameter('fechaFin', $hoyFin);
+            
+            $result = $queryBuilder->getQuery()->getSingleScalarResult();
+            
+            return (int)$result;
+        } catch (\Exception $e) {
+            // Manejo de errores
+            error_log("Error al obtener total de pedidos de hoy: " . $e->getMessage());
+            return 0;
+        }
     }
 
     public function restaurantes() {

@@ -68,6 +68,9 @@ class RestauranteController {
             $result = $stmt->executeQuery();
             $restaurantesData = $result->fetchAllAssociative();
             
+            // Obtener el recuento de pedidos de hoy para cada restaurante
+            $pedidosHoyPorRestaurante = $this->getPedidosHoyPorRestaurante();
+            
             // Convertimos los datos en objetos Restaurante
             $restaurantes = [];
             foreach ($restaurantesData as $data) {
@@ -91,6 +94,16 @@ class RestauranteController {
                 $fechaProperty->setAccessible(true);
                 $fechaProperty->setValue($restaurante, new \DateTime($data['fecha_registro']));
                 
+                // Asignar el contador de pedidos de hoy
+                $restauranteId = $data['id'];
+                $contadorPedidosHoy = isset($pedidosHoyPorRestaurante[$restauranteId]) ? 
+                    $pedidosHoyPorRestaurante[$restauranteId] : 0;
+                
+                // Añadir propiedad personalizada para pedidos de hoy
+                $pedidosHoyProperty = $reflClass->getProperty('pedidosHoy');
+                $pedidosHoyProperty->setAccessible(true);
+                $pedidosHoyProperty->setValue($restaurante, $contadorPedidosHoy);
+                
                 $restaurantes[] = $restaurante;
             }
             
@@ -98,6 +111,43 @@ class RestauranteController {
         } catch (\Exception $e) {
             // Manejo de errores
             error_log($e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Obtiene el recuento de pedidos de hoy para cada restaurante
+     * @return array Un array asociativo con el ID del restaurante como clave y el número de pedidos como valor
+     */
+    private function getPedidosHoyPorRestaurante() {
+        try {
+            // Obtener la fecha de hoy
+            $hoy = new \DateTime('today');
+            $hoyFin = new \DateTime('today 23:59:59');
+            
+            // Usar Query Builder de Doctrine
+            $queryBuilder = $this->em->createQueryBuilder();
+            
+            $queryBuilder
+                ->select('p.restauranteId, COUNT(p.id) as totalPedidos')
+                ->from('Comida\Domicilio\Models\Pedido', 'p')
+                ->where('p.fechaPedido BETWEEN :fechaInicio AND :fechaFin')
+                ->groupBy('p.restauranteId')
+                ->setParameter('fechaInicio', $hoy)
+                ->setParameter('fechaFin', $hoyFin);
+            
+            $result = $queryBuilder->getQuery()->getResult();
+            
+            // Convertir a un array asociativo [restaurante_id => total_pedidos]
+            $resultado = [];
+            foreach ($result as $row) {
+                $resultado[$row['restauranteId']] = (int)$row['totalPedidos'];
+            }
+            
+            return $resultado;
+        } catch (\Exception $e) {
+            // Manejo de errores
+            error_log("Error al obtener pedidos por restaurante: " . $e->getMessage());
             return [];
         }
     }
