@@ -25,53 +25,51 @@ class AuthController {
         $this->smarty->display('auth/login.tpl');
     }
 
-    public function login() {
-        header('Content-Type: application/json');
+   public function login() {
+    header('Content-Type: application/json');
 
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
 
-        
-    /* // DEBUG TEMPORAL
+    if (empty($email) || empty($password)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Correo y contraseña son obligatorios']);
+        return;
+    }
+
     $usuario = $this->em->getRepository(Usuario::class)->findOneBy(['email' => $email]);
 
-    var_dump($password); // 👈 Lo que escribe el usuario
-    var_dump($usuario?->getPassword()); // 👈 Lo que hay en la BD
-    var_dump(password_verify($password, $usuario?->getPassword())); // 👈 true o false
-
-    exit; */
-
-        if (empty($email) || empty($password)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Correo y contraseña son obligatorios']);
-            return;
-        }
-
-        $usuario = $this->em->getRepository(Usuario::class)->findOneBy(['email' => $email]);
-
-        if (!$usuario || !password_verify($password, $usuario->getPassword())) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Credenciales incorrectas']);
-            return;
-        }
-
-        // Guardar en sesión con SessionHelper
-        SessionHelper::login([
-            'id' => $usuario->getId(),
-            'nombre' => $usuario->getNombre(),
-            'rol' => $usuario->getRol(),
-        ]);
-
-        echo json_encode([
-            'success' => true,
-            'user' => [
-                'id' => $usuario->getId(),
-                'name' => $usuario->getNombre(),
-                'email' => $usuario->getEmail(),
-                'rol' => $usuario->getRol()
-            ]
-        ]);
+    if (!$usuario || !password_verify($password, $usuario->getPassword())) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Credenciales incorrectas']);
+        return;
     }
+
+    // Guardar en sesión con SessionHelper
+    SessionHelper::login([
+        'id' => $usuario->getId(),
+        'nombre' => $usuario->getNombre(),
+        'rol' => $usuario->getRol(),
+    ]);
+
+    // Determinar la ruta de redirección basada en el rol
+    $redirectUrl = '/dashboard'; // Ruta por defecto para propietarios/admin
+    
+    if ($usuario->getRol() === 'usuario') { // Cambio aquí: "usuario" en lugar de "cliente"
+        $redirectUrl = '/cliente/dashboard'; // Mantenemos la ruta /cliente/ por claridad en la arquitectura
+    }
+
+    echo json_encode([
+        'success' => true,
+        'user' => [
+            'id' => $usuario->getId(),
+            'name' => $usuario->getNombre(),
+            'email' => $usuario->getEmail(),
+            'rol' => $usuario->getRol()
+        ],
+        'redirect' => $redirectUrl
+    ]);
+}
 
     public function dashboard() {
         SessionHelper::check(); // Redirige si no hay sesión válida

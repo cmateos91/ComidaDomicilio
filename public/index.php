@@ -7,6 +7,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 use Comida\Domicilio\Controllers\AuthController;
 use Comida\Domicilio\Controllers\RestauranteController;
+use Comida\Domicilio\Controllers\ClienteController;
 
 // Rutas públicas
 if ($uri === '/' && $method === 'GET') {
@@ -24,13 +25,12 @@ if ($uri === '/logout') {
     exit;
 }
 
+// Rutas para ADMIN/PROPIETARIO
 if ($uri === '/dashboard' && $method === 'GET') {
     (new AuthController($entityManager))->dashboard();
     exit;
 }
 
-
-// Rutas de las secciones del panel
 if ($uri === '/restaurantes' && $method === 'GET') {
     (new RestauranteController($entityManager))->mostrarRestaurantes();
     exit;
@@ -61,17 +61,36 @@ if ($uri === '/configuracion' && $method === 'GET') {
     exit;
 }
 
+// RUTAS PARA USUARIO CLIENTE
+if ($uri === '/cliente/inicio' && $method === 'GET') {
+    (new ClienteController($entityManager))->inicio();
+    exit;
+}
+
+if ($uri === '/cliente/restaurantes' && $method === 'GET') {
+    (new ClienteController($entityManager))->restaurantes();
+    exit;
+}
+
+if ($uri === '/cliente/pedidos' && $method === 'GET') {
+    (new ClienteController($entityManager))->pedidos();
+    exit;
+}
+
+// Más rutas para cliente...
+
 // Rutas API
 if ($uri === '/api/restaurantes' && $method === 'GET') {
     (new RestauranteController($entityManager))->index();
     exit;
 }
 
+// En public/index.php
+if ($uri === '/cliente/dashboard' && $method === 'GET') {
+    (new ClienteController($entityManager))->inicio();
+    exit;
+}
 
 // 404 por defecto
 http_response_code(404);
 echo json_encode(['error' => 'Ruta no encontrada']);
-
-//var_dump($uri);
-//exit;
-
