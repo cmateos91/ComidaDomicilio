@@ -6,19 +6,12 @@ use Comida\Domicilio\Models\Usuario;
 use Comida\Domicilio\Models\Restaurante;
 use Comida\Domicilio\Models\Pedido;
 use Comida\Domicilio\Utils\SessionHelper;
-use Smarty\Smarty;
+use Comida\Domicilio\Core\Controller;
 
-class ClienteController {
-    private $em;
-    private $smarty;
-
+class ClienteController extends Controller {
+    
     public function __construct($entityManager) {
-        $this->em = $entityManager;
-        
-        $this->smarty = new Smarty();
-        $this->smarty->setTemplateDir(__DIR__ . '/../Views');
-        $this->smarty->setCompileDir(__DIR__ . '/../../templates_c');
-        
+        parent::__construct($entityManager);
         SessionHelper::start();
     }
     
@@ -30,8 +23,7 @@ class ClienteController {
         
         $rol = SessionHelper::get('usuario_rol');
         if ($rol !== 'usuario') { // Cambio aquí: "usuario" en lugar de "cliente"
-            header('Location: /dashboard');
-            exit;
+            $this->redirect('/dashboard');
         }
     }
     
@@ -49,29 +41,52 @@ class ClienteController {
         
         if (!$usuario) {
             SessionHelper::logout();
-            header('Location: /');
-            exit;
+            $this->redirect('/');
         }
         
-        // Obtener pedidos recientes con el repositorio personalizado
-        $pedidoRepo = $this->em->getRepository(Pedido::class);
-        $pedidosRecientes = $pedidoRepo->getPedidosUsuarioConDetalles($usuario, 3);
+        // Vamos a simplificar el código para localizar el error
+        // Obtener pedidos recientes utilizando una consulta directa para evitar problemas con los repositorios
+        $usuarioIdInt = (int)$usuarioId;
+        $conn = $this->em->getConnection();
         
-        // Obtener restaurantes populares utilizando el repositorio personalizado
-        $restauranteRepo = $this->em->getRepository(Restaurante::class);
-        $restaurantesPopulares = $restauranteRepo->getRestaurantesPopulares(6);
+        $sql = "SELECT p.* FROM pedidos p WHERE p.usuario_id = {$usuarioIdInt} ORDER BY p.fecha_pedido DESC LIMIT 3";
+        $result = $conn->executeQuery($sql);
+        $pedidosRecientes = $result->fetchAllAssociative();
         
-        $this->smarty->assign('nombre', $nombre);
-        $this->smarty->assign('titulo', 'Mi Cuenta');
-        $this->smarty->assign('seccion_activa', 'inicio');
-        $this->smarty->assign('pedidosRecientes', $pedidosRecientes);
-        $this->smarty->assign('restaurantesPopulares', $restaurantesPopulares);
+        // Obtener restaurantes populares con una consulta simple
+        $sql = "SELECT r.* FROM restaurante r WHERE r.activo = 1 ORDER BY r.id DESC LIMIT 6";
+        $result = $conn->executeQuery($sql);
+        $restaurantesPopulares = $result->fetchAllAssociative();
         
-        // Añadir CSS para la vista de cliente
-        $this->smarty->assign('css_adicional', ['cliente.css']);
+        // Simplificar los datos para mostrar en la vista
+        $pedidosSimples = [];
+        foreach ($pedidosRecientes as $pedido) {
+            $pedidosSimples[] = [
+                'id' => $pedido['id'],
+                'fecha' => $pedido['fecha_pedido'],
+                'total' => $pedido['total'],
+                'estado' => $pedido['estado'],
+            ];
+        }
         
-        // Renderizar la vista una sola vez
-        $this->smarty->display('cliente/dashboard/index.tpl');
+        $restaurantesSimples = [];
+        foreach ($restaurantesPopulares as $restaurante) {
+            $restaurantesSimples[] = [
+                'id' => $restaurante['id'],
+                'nombre' => $restaurante['nombre'],
+                'direccion' => $restaurante['direccion'],
+                'imagen' => $restaurante['imagen'] ?? null,
+            ];
+        }
+        
+        $this->render('cliente/dashboard/index.tpl', [
+            'nombre' => $nombre,
+            'titulo' => 'Mi Cuenta',
+            'seccion_activa' => 'inicio',
+            'pedidosRecientes' => $pedidosSimples,
+            'restaurantesPopulares' => $restaurantesSimples,
+            'css_adicional' => ['cliente.css']
+        ]);
     }
     
     /**
@@ -83,24 +98,35 @@ class ClienteController {
         $usuarioId = SessionHelper::get('usuario_id');
         $nombre = SessionHelper::get('usuario_nombre');
         
-        // Obtener el usuario completo
-        $usuario = $this->em->getRepository(Usuario::class)->find($usuarioId);
+        // Vamos a simplificar el código para localizar el error
+        // Obtener pedidos utilizando una consulta directa para evitar problemas con los repositorios
+        $usuarioIdInt = (int)$usuarioId;
+        $conn = $this->em->getConnection();
         
-        if (!$usuario) {
-            SessionHelper::logout();
-            header('Location: /');
-            exit;
+        $sql = "SELECT p.* FROM pedidos p WHERE p.usuario_id = {$usuarioIdInt} ORDER BY p.fecha_pedido DESC";
+        $result = $conn->executeQuery($sql);
+        $pedidosData = $result->fetchAllAssociative();
+        
+        // Simplificar los datos para mostrar en la vista
+        $pedidosSimples = [];
+        foreach ($pedidosData as $pedido) {
+            $pedidosSimples[] = [
+                'id' => $pedido['id'],
+                'fecha' => $pedido['fecha_pedido'],
+                'total' => $pedido['total'],
+                'estado' => $pedido['estado'],
+                'direccion' => $pedido['direccion_entrega'],
+                'telefono' => $pedido['telefono_contacto'],
+                'notas' => $pedido['notas'],
+            ];
         }
         
-        // Obtener todos los pedidos del usuario con el repositorio personalizado
-        $pedidoRepo = $this->em->getRepository(Pedido::class);
-        $pedidos = $pedidoRepo->getPedidosUsuarioConDetalles($usuario);
-        
-        $this->smarty->assign('nombre', $nombre);
-        $this->smarty->assign('titulo', 'Mis Pedidos');
-        $this->smarty->assign('seccion_activa', 'pedidos');
-        $this->smarty->assign('pedidos', $pedidos);
-        $this->smarty->display('cliente/pedidos/index.tpl');
+        $this->render('cliente/pedidos/index.tpl', [
+            'nombre' => $nombre,
+            'titulo' => 'Mis Pedidos',
+            'seccion_activa' => 'pedidos',
+            'pedidos' => $pedidosSimples
+        ]);
     }
     
     /**
@@ -111,14 +137,33 @@ class ClienteController {
         
         $nombre = SessionHelper::get('usuario_nombre');
         
-        // Obtener todos los restaurantes activos usando el repositorio personalizado
-        $restauranteRepo = $this->em->getRepository(Restaurante::class);
-        $restaurantes = $restauranteRepo->getRestaurantesActivos();
+        // Vamos a simplificar el código para localizar el error
+        // Obtener restaurantes activos usando una consulta directa
+        $conn = $this->em->getConnection();
         
-        $this->smarty->assign('nombre', $nombre);
-        $this->smarty->assign('titulo', 'Restaurantes');
-        $this->smarty->assign('seccion_activa', 'restaurantes');
-        $this->smarty->assign('restaurantes', $restaurantes);
-        $this->smarty->display('cliente/restaurantes/index.tpl');
+        $sql = "SELECT r.* FROM restaurante r WHERE r.activo = 1 ORDER BY r.nombre ASC";
+        $result = $conn->executeQuery($sql);
+        $restaurantesData = $result->fetchAllAssociative();
+        
+        // Simplificar los datos para mostrar en la vista
+        $restaurantesSimples = [];
+        foreach ($restaurantesData as $restaurante) {
+            $restaurantesSimples[] = [
+                'id' => $restaurante['id'],
+                'nombre' => $restaurante['nombre'],
+                'direccion' => $restaurante['direccion'],
+                'imagen' => $restaurante['imagen'] ?? null,
+                'telefono' => $restaurante['telefono'] ?? '',
+                'email' => $restaurante['email'] ?? '',
+                'descripcion' => $restaurante['descripcion'] ?? '',
+            ];
+        }
+        
+        $this->render('cliente/restaurantes/index.tpl', [
+            'nombre' => $nombre,
+            'titulo' => 'Restaurantes',
+            'seccion_activa' => 'restaurantes',
+            'restaurantes' => $restaurantesSimples
+        ]);
     }
 }

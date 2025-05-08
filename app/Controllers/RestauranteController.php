@@ -7,48 +7,39 @@ use Comida\Domicilio\Models\Usuario;
 use Comida\Domicilio\Models\Pedido;
 use Comida\Domicilio\Utils\BaseEntityUtils;
 use Comida\Domicilio\Utils\SessionHelper;
+use Comida\Domicilio\Core\Controller;
 use Doctrine\DBAL\Exception;
-use Smarty\Smarty;
 
-class RestauranteController {
-    private $em;
-    private $smarty;
+class RestauranteController extends Controller {
 
     public function __construct($entityManager) {
-        $this->em = $entityManager;
-        
-        $this->smarty = new Smarty();
-        $this->smarty->setTemplateDir(__DIR__ . '/../Views');
-        $this->smarty->setCompileDir(__DIR__ . '/../../templates_c');
+        parent::__construct($entityManager);
+        SessionHelper::start();
     }
 
     // GET /api/restaurantes
     public function index() {
         SessionHelper::check(); // Redirige si no hay sesión válida
-        header('Content-Type: application/json');
-
+        
         $repo = $this->em->getRepository(Restaurante::class);
         $restaurantes = $repo->findAll();
 
         $data = array_map([BaseEntityUtils::class, 'toArray'], $restaurantes);
 
-        echo json_encode($data);
+        $this->json($data);
     }
 
     // GET /api/restaurantes/{id}
     public function show($id) {
-        header('Content-Type: application/json');
-
         $repo = $this->em->getRepository(Restaurante::class);
         $restaurante = $repo->find($id);
 
         if (!$restaurante) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Restaurante no encontrado']);
+            $this->json(['error' => 'Restaurante no encontrado'], 404);
             return;
         }
 
-        echo json_encode($this->mapRestaurante($restaurante));
+        $this->json($this->mapRestaurante($restaurante));
     }
 
     // Obtiene los restaurantes asociados a un usuario
@@ -119,13 +110,170 @@ class RestauranteController {
         $restaurantes = $this->getRestaurantesByUsuario($usuarioId);
         
         // Pasar datos a la plantilla
-        $this->smarty->assign('nombre', $nombre);
-        $this->smarty->assign('titulo', 'Restaurantes');
-        $this->smarty->assign('seccion_activa', 'restaurantes');
-        $this->smarty->assign('restaurantes', $restaurantes);
-        $this->smarty->assign('css_adicional', ['restaurantes.css']);
-        // $this->smarty->assign('js_adicional', ['restaurantes.js']); // Si hay JS específico
-        $this->smarty->display('restaurantes/index.tpl');
+        $this->render('restaurantes/index.tpl', [
+            'nombre' => $nombre,
+            'titulo' => 'Restaurantes',
+            'seccion_activa' => 'restaurantes',
+            'restaurantes' => $restaurantes,
+            'css_adicional' => ['restaurantes.css']
+        ]);
+    }
+
+    // POST /api/restaurantes
+    public function create() {
+        SessionHelper::check();
+        
+        $usuarioId = SessionHelper::get('usuario_id');
+        $rol = SessionHelper::get('usuario_rol');
+        
+        // Solo admin o propietario pueden crear restaurantes
+        if ($rol !== 'admin' && $rol !== 'propietario') {
+            $this->json(['error' => 'No autorizado'], 403);
+            return;
+        }
+        
+        // Obtener datos del formulario
+        $nombre = $_POST['nombre'] ?? '';
+        $direccion = $_POST['direccion'] ?? '';
+        $telefono = $_POST['telefono'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $descripcion = $_POST['descripcion'] ?? '';
+        
+        // Validación básica
+        if (empty($nombre) || empty($direccion)) {
+            $this->json(['error' => 'Nombre y dirección son obligatorios'], 400);
+            return;
+        }
+        
+        try {
+            // Crear el restaurante
+            $restaurante = new Restaurante();
+            $restaurante->setNombre($nombre);
+            $restaurante->setDireccion($direccion);
+            $restaurante->setTelefono($telefono);
+            $restaurante->setEmail($email);
+            $restaurante->setDescripcion($descripcion);
+            $restaurante->setFechaRegistro(new \DateTime());
+            $restaurante->setActivo(true);
+            
+            // Guardar en la base de datos
+            $this->em->persist($restaurante);
+            
+            // Asociar el restaurante al usuario
+            $usuario = $this->em->getRepository(Usuario::class)->find($usuarioId);
+            $usuario->addRestaurante($restaurante);
+            
+            $this->em->flush();
+            
+            $this->json([
+                'success' => true,
+                'restaurante' => $this->mapRestaurante($restaurante)
+            ]);
+        } catch (\Exception $e) {
+            $this->json(['error' => 'Error al crear el restaurante: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    // PUT /api/restaurantes/{id}
+    public function update($id) {
+        SessionHelper::check();
+        
+        $usuarioId = SessionHelper::get('usuario_id');
+        $rol = SessionHelper::get('usuario_rol');
+        
+        // Obtener el restaurante
+        $restaurante = $this->em->getRepository(Restaurante::class)->find($id);
+        
+        if (!$restaurante) {
+            $this->json(['error' => 'Restaurante no encontrado'], 404);
+            return;
+        }
+        
+        // Verificar que el usuario tiene permiso para editar este restaurante
+        $tienePermiso = false;
+        
+        if ($rol === 'admin') {
+            $tienePermiso = true;
+        } else {
+            // Verificar si el usuario es propietario del restaurante
+            $usuario = $this->em->getRepository(Usuario::class)->find($usuarioId);
+            $tienePermiso = $usuario->getRestaurantes()->contains($restaurante);
+        }
+        
+        if (!$tienePermiso) {
+            $this->json(['error' => 'No autorizado'], 403);
+            return;
+        }
+        
+        // Obtener los datos de la solicitud
+        $data = json_decode(file_get_contents("php://input"), true);
+        
+        if (!$data) {
+            $this->json(['error' => 'Datos inválidos'], 400);
+            return;
+        }
+        
+        try {
+            // Actualizar los campos del restaurante
+            if (isset($data['nombre'])) $restaurante->setNombre($data['nombre']);
+            if (isset($data['direccion'])) $restaurante->setDireccion($data['direccion']);
+            if (isset($data['telefono'])) $restaurante->setTelefono($data['telefono']);
+            if (isset($data['email'])) $restaurante->setEmail($data['email']);
+            if (isset($data['descripcion'])) $restaurante->setDescripcion($data['descripcion']);
+            if (isset($data['activo'])) $restaurante->setActivo((bool)$data['activo']);
+            if (isset($data['imagen'])) $restaurante->setImagen($data['imagen']);
+            
+            $this->em->flush();
+            
+            $this->json([
+                'success' => true,
+                'restaurante' => $this->mapRestaurante($restaurante)
+            ]);
+        } catch (\Exception $e) {
+            $this->json(['error' => 'Error al actualizar el restaurante: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    // DELETE /api/restaurantes/{id}
+    public function delete($id) {
+        SessionHelper::check();
+        
+        $usuarioId = SessionHelper::get('usuario_id');
+        $rol = SessionHelper::get('usuario_rol');
+        
+        // Obtener el restaurante
+        $restaurante = $this->em->getRepository(Restaurante::class)->find($id);
+        
+        if (!$restaurante) {
+            $this->json(['error' => 'Restaurante no encontrado'], 404);
+            return;
+        }
+        
+        // Verificar que el usuario tiene permiso para eliminar este restaurante
+        $tienePermiso = false;
+        
+        if ($rol === 'admin') {
+            $tienePermiso = true;
+        } else {
+            // Verificar si el usuario es propietario del restaurante
+            $usuario = $this->em->getRepository(Usuario::class)->find($usuarioId);
+            $tienePermiso = $usuario->getRestaurantes()->contains($restaurante);
+        }
+        
+        if (!$tienePermiso) {
+            $this->json(['error' => 'No autorizado'], 403);
+            return;
+        }
+        
+        try {
+            // En lugar de eliminar, marcamos como inactivo
+            $restaurante->setActivo(false);
+            $this->em->flush();
+            
+            $this->json(['success' => true]);
+        } catch (\Exception $e) {
+            $this->json(['error' => 'Error al eliminar el restaurante: ' . $e->getMessage()], 500);
+        }
     }
 
     // 🔁 Utilidad privada para mapear objeto a array JSON

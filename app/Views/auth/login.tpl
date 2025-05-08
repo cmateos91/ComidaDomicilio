@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="login-page">
 <head>
   <meta charset="UTF-8" />
   <title>Iniciar sesión</title>

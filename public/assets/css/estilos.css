@@ -5,19 +5,20 @@
   font-style: normal;
 }
 
-html, body {
+.login-page {
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
-body {
+.login-page body {
   font-family: 'Poppins', sans-serif;
   background: linear-gradient(135deg, #181825 0%, #00ff85 100%);
   display: flex;
   justify-content: center;
   align-items: center;
   color: #181825;
+  height: 100vh;
 }
 
 .login-container {

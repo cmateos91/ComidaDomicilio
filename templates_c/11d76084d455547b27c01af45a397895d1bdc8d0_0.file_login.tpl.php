@@ -1,18 +1,18 @@
 <?php
-/* Smarty version 5.5.0, created on 2025-05-07 12:48:28
+/* Smarty version 5.5.0, created on 2025-05-08 14:33:59
   from 'file:auth/login.tpl' */
 
 /* @var \Smarty\Template $_smarty_tpl */
 if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   'version' => '5.5.0',
-  'unifunc' => 'content_681b3a7ccac3b3_25391489',
+  'unifunc' => 'content_681ca4b702a184_72090117',
   'has_nocache_code' => false,
   'file_dependency' => 
   array (
     '11d76084d455547b27c01af45a397895d1bdc8d0' => 
     array (
       0 => 'auth/login.tpl',
-      1 => 1746614906,
+      1 => 1746707500,
       2 => 'file',
     ),
   ),
@@ -20,10 +20,10 @@ if ($_smarty_tpl->getCompiled()->isFresh($_smarty_tpl, array (
   array (
   ),
 ))) {
-function content_681b3a7ccac3b3_25391489 (\Smarty\Template $_smarty_tpl) {
+function content_681ca4b702a184_72090117 (\Smarty\Template $_smarty_tpl) {
 $_smarty_current_dir = 'C:\\xampp\\htdocs\\comida-domicilio-2\\app\\Views\\auth';
 ?><!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="login-page">
 <head>
   <meta charset="UTF-8" />
   <title>Iniciar sesión</title>

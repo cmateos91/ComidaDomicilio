@@ -1,96 +1,68 @@
 <?php
+
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../app/Config/enviroment.php';
 
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$method = $_SERVER['REQUEST_METHOD'];
-
+use Comida\Domicilio\Core\Application;
 use Comida\Domicilio\Controllers\AuthController;
 use Comida\Domicilio\Controllers\RestauranteController;
 use Comida\Domicilio\Controllers\ClienteController;
+use Comida\Domicilio\Utils\SessionHelper;
+use Comida\Domicilio\Middleware\RoleMiddleware;
+
+// Iniciar la aplicación
+$app = new Application($entityManager);
+$router = $app->getRouter();
+
+// Middleware de autenticación
+$authMiddleware = function () {
+    SessionHelper::check();
+};
+
+// Middleware de roles
+$adminMiddleware = RoleMiddleware::check(['admin']);
+$propietarioMiddleware = RoleMiddleware::check(['admin', 'propietario']);
+$usuarioMiddleware = RoleMiddleware::check(['usuario']);
 
 // Rutas públicas
-if ($uri === '/' && $method === 'GET') {
-    (new AuthController($entityManager))->showLogin();
-    exit;
-}
+$router->get('/', [AuthController::class, 'showLogin']);
+$router->post('/api/login', [AuthController::class, 'login']);
+$router->get('/logout', [AuthController::class, 'logout']);
 
-if ($uri === '/api/login' && $method === 'POST') {
-    (new AuthController($entityManager))->login();
-    exit;
-}
+// Rutas para el panel de administración
+$router->get('/dashboard', [AuthController::class, 'dashboard'], [$authMiddleware]);
 
-if ($uri === '/logout') {
-    (new AuthController($entityManager))->logout();
-    exit;
-}
+// Rutas para restaurantes (panel de administración)
+$router->group('/restaurantes', function ($router) {
+    $router->get('', [RestauranteController::class, 'mostrarRestaurantes']);
+    $router->get('/{id}', [RestauranteController::class, 'show']);
+    $router->get('/nuevo', [RestauranteController::class, 'mostrarFormularioCrear']);
+    $router->get('/{id}/editar', [RestauranteController::class, 'mostrarFormularioEditar']);
+}, [$authMiddleware, $propietarioMiddleware]);
 
-// Rutas para ADMIN/PROPIETARIO
-if ($uri === '/dashboard' && $method === 'GET') {
-    (new AuthController($entityManager))->dashboard();
-    exit;
-}
+// API Restaurantes
+$router->group('/api/restaurantes', function ($router) {
+    $router->get('', [RestauranteController::class, 'index']);
+    $router->get('/{id}', [RestauranteController::class, 'show']);
+    $router->post('', [RestauranteController::class, 'create']);
+    $router->put('/{id}', [RestauranteController::class, 'update']);
+    $router->delete('/{id}', [RestauranteController::class, 'delete']);
+}, [$authMiddleware, $propietarioMiddleware]);
 
-if ($uri === '/restaurantes' && $method === 'GET') {
-    (new RestauranteController($entityManager))->mostrarRestaurantes();
-    exit;
-}
+// Rutas para otras secciones del panel
+$router->get('/menus', [AuthController::class, 'menus'], [$authMiddleware]);
+$router->get('/pedidos', [AuthController::class, 'pedidos'], [$authMiddleware]);
+$router->get('/clientes', [AuthController::class, 'clientes'], [$authMiddleware]);
+$router->get('/facturacion', [AuthController::class, 'facturacion'], [$authMiddleware]);
+$router->get('/configuracion', [AuthController::class, 'configuracion'], [$authMiddleware]);
 
-if ($uri === '/menus' && $method === 'GET') {
-    (new AuthController($entityManager))->menus();
-    exit;
-}
+// Rutas para el área de cliente
+$router->group('/cliente', function ($router) {
+    $router->get('/dashboard', [ClienteController::class, 'inicio']);
+    $router->get('/inicio', [ClienteController::class, 'inicio']);
+    $router->get('/restaurantes', [ClienteController::class, 'restaurantes']);
+    $router->get('/pedidos', [ClienteController::class, 'pedidos']);
+}, [$authMiddleware, $usuarioMiddleware]);
 
-if ($uri === '/pedidos' && $method === 'GET') {
-    (new AuthController($entityManager))->pedidos();
-    exit;
-}
-
-if ($uri === '/clientes' && $method === 'GET') {
-    (new AuthController($entityManager))->clientes();
-    exit;
-}
-
-if ($uri === '/facturacion' && $method === 'GET') {
-    (new AuthController($entityManager))->facturacion();
-    exit;
-}
-
-if ($uri === '/configuracion' && $method === 'GET') {
-    (new AuthController($entityManager))->configuracion();
-    exit;
-}
-
-// RUTAS PARA USUARIO CLIENTE
-if ($uri === '/cliente/inicio' && $method === 'GET') {
-    (new ClienteController($entityManager))->inicio();
-    exit;
-}
-
-if ($uri === '/cliente/restaurantes' && $method === 'GET') {
-    (new ClienteController($entityManager))->restaurantes();
-    exit;
-}
-
-if ($uri === '/cliente/pedidos' && $method === 'GET') {
-    (new ClienteController($entityManager))->pedidos();
-    exit;
-}
-
-// Más rutas para cliente...
-
-// Rutas API
-if ($uri === '/api/restaurantes' && $method === 'GET') {
-    (new RestauranteController($entityManager))->index();
-    exit;
-}
-
-// En public/index.php
-if ($uri === '/cliente/dashboard' && $method === 'GET') {
-    (new ClienteController($entityManager))->inicio();
-    exit;
-}
-
-// 404 por defecto
-http_response_code(404);
-echo json_encode(['error' => 'Ruta no encontrada']);
+// Ejecutar la aplicación
+$app->run();

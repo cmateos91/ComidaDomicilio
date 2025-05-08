@@ -1,0 +1,70 @@
+/* Correcciones para el diseño del área cliente */
+
+body {
+    display: block !important;
+    background: var(--background-light) !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    line-height: 1.5 !important;
+    color: var(--text-dark) !important;
+}
+
+.restaurants-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+    gap: 20px !important;
+}
+
+.restaurant-card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}
+
+.restaurant-info {
+    flex-grow: 1 !important;
+}
+
+/* Asegurar que los botones de menú estén al final */
+.btn-ver-menu {
+    margin-top: auto !important;
+}
+
+/* Correcciones para elementos de navegación */
+.main-nav ul {
+    display: flex !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 20px !important;
+}
+
+/* Correcciones para el contenedor principal */
+.container {
+    max-width: 1200px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 15px !important;
+    box-sizing: border-box !important;
+}
+
+/* Correcciones para el encabezado */
+.top-header {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background-color: var(--background-white) !important;
+}
+
+/* Asegurar que los elementos flexibles funcionen correctamente */
+.header-content {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+/* Correcciones para el footer */
+.main-footer {
+    width: 100% !important;
+}
