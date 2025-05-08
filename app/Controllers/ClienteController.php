@@ -44,11 +44,20 @@ private function checkClienteRole() {
         $usuarioId = SessionHelper::get('usuario_id');
         $nombre = SessionHelper::get('usuario_nombre');
         
-        // Obtener pedidos recientes, restaurantes populares, etc.
+        // Obtener pedidos recientes
         $pedidosRecientes = $this->em->getRepository(Pedido::class)
-            ->findBy(['usuario' => $usuarioId], ['fechaPedido' => 'DESC'], 3);
+            ->findBy(['usuarioId' => $usuarioId], ['fechaPedido' => 'DESC'], 3);
         
-        // Restaurantes populares o últimos visitados
+        // Cargar los restaurantes asociados a los pedidos
+        $restaurantes = [];
+        foreach ($pedidosRecientes as $pedido) {
+            $restauranteId = $pedido->getRestauranteId();
+            if (!isset($restaurantes[$restauranteId])) {
+                $restaurantes[$restauranteId] = $this->em->getRepository(Restaurante::class)->find($restauranteId);
+            }
+        }
+        
+        // Restaurantes populares
         $restaurantesPopulares = $this->em->getRepository(Restaurante::class)
             ->findBy(['activo' => true], ['id' => 'DESC'], 6);
         
@@ -56,27 +65,14 @@ private function checkClienteRole() {
         $this->smarty->assign('titulo', 'Mi Cuenta');
         $this->smarty->assign('seccion_activa', 'inicio');
         $this->smarty->assign('pedidosRecientes', $pedidosRecientes);
+        $this->smarty->assign('restaurantes', $restaurantes); // Pasamos los restaurantes a la vista
         $this->smarty->assign('restaurantesPopulares', $restaurantesPopulares);
+        
+        // Añadir CSS para la vista de cliente
+        $this->smarty->assign('css_adicional', ['cliente.css']);
+        
+        // Renderizar la vista una sola vez
         $this->smarty->display('cliente/dashboard/index.tpl');
-    }
-    
-    /**
-     * Listado de restaurantes para el cliente
-     */
-    public function restaurantes() {
-        $this->checkClienteRole();
-        
-        $nombre = SessionHelper::get('usuario_nombre');
-        
-        // Obtener todos los restaurantes activos
-        $restaurantes = $this->em->getRepository(Restaurante::class)
-            ->findBy(['activo' => true], ['nombre' => 'ASC']);
-        
-        $this->smarty->assign('nombre', $nombre);
-        $this->smarty->assign('titulo', 'Restaurantes');
-        $this->smarty->assign('seccion_activa', 'restaurantes');
-        $this->smarty->assign('restaurantes', $restaurantes);
-        $this->smarty->display('cliente/restaurantes/index.tpl');
     }
     
     /**

@@ -20,7 +20,7 @@
     
     <a href="/menus" class="nav-item {if $seccion_activa == 'menus'}active{/if}">
       <div class="nav-icon">📋</div>
-      <div class="nav-text">Menús</div>
+      <div class="nav-text">Menu</div>
     </a>
     
     <a href="/pedidos" class="nav-item {if $seccion_activa == 'pedidos'}active{/if}">

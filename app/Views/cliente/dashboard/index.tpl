@@ -59,7 +59,13 @@
             <h4>Pedido #{$pedido->getId()}</h4>
             <span class="order-date">{$pedido->getFechaPedido()|date_format:"%d/%m/%Y"}</span>
           </div>
-          <div class="order-restaurant">{$pedido->getRestaurante()->getNombre()}</div>
+          <div class="order-restaurant">
+            {if isset($restaurantes[$pedido->getRestauranteId()])}
+              {$restaurantes[$pedido->getRestauranteId()]->getNombre()}
+            {else}
+              Restaurante ID: {$pedido->getRestauranteId()}
+            {/if}
+          </div>
           <div class="order-status status-{$pedido->getEstado()}">{$pedido->getEstado()}</div>
           <div class="order-total">{$pedido->getTotal()}€</div>
           <a href="/cliente/pedido/{$pedido->getId()}" class="btn-action">Ver detalles</a>
